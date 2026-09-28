@@ -24,19 +24,35 @@
     input, select, button { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccd0d5; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
     button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
-    th, td { padding: 8px 5px; border-bottom: 1px solid #ebedf0; text-align: left; }
+    th, td { padding: 8px 5px; border-bottom: 1px solid #ebedf0; text-align: left; vertical-align: middle; }
     th { background: #f5f6f7; font-weight: 600; }
     .status-paid { color: #137333; font-weight: bold; }
     .status-pending { color: #c5221f; font-weight: bold; }
     .date-badge { font-size: 11px; color: #555; background: #eee; padding: 2px 5px; border-radius: 4px; display: inline-block; margin-top: 2px; }
     .share-tag { font-size: 11px; background: #e8f0fe; color: #1a73e8; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
+    
+    /* Pay Now & Paid ബട്ടണുകൾ */
+    .btn-pay { display: inline-flex; align-items: center; justify-content: center; gap: 4px; background: #25D366; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; border: none; cursor: pointer; }
+    .btn-pay:hover { background: #1ebd5b; }
+    .paid-badge { color: #137333; font-weight: bold; font-size: 12px; background: #e6f4ea; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+
+    /* ഹിസ്റ്ററി ലിസ്റ്റ് */
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px dashed #e4e6eb; font-size: 13px; }
+    .history-item:last-child { border-bottom: none; }
+    .history-date { font-size: 11px; color: #65676b; margin-top: 2px; }
+    .history-amount { font-weight: bold; color: #137333; }
+
+    /* QR കോഡ് പോപ്പ്അപ്പ് മോഡൽ */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+    .modal-content { background: white; padding: 20px; border-radius: 12px; text-align: center; max-width: 320px; width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .close-btn { background: #65676b; color: white; padding: 8px 16px; border-radius: 6px; margin-top: 12px; border: none; cursor: pointer; }
   </style>
 </head>
 <body>
 
   <div class="header">
     <h1>കുടുംബ ഫണ്ട്</h1>
-    <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 13px;">1 വിഹിതം = ₹1000/മാസം (കാലാവധി: 12 മാസം)</p>
+    <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 13px;">1 വിഹിതം = ₹1000/മാസം | നിലവിലെ മാസം: <span id="currentMonthText">1-ാം മാസം</span></p>
   </div>
 
   <!-- അറിയിപ്പ് ബോക്സ് -->
@@ -76,34 +92,76 @@
       <thead>
         <tr>
           <th>പേര്</th>
-          <th>അടച്ചത്</th>
-          <th>തീയതി</th>
+          <th>ആകെ അടച്ചത്</th>
           <th>1 വർഷത്തെ ബാക്കി</th>
+          <th>അടവ് (Pay)</th>
         </tr>
       </thead>
       <tbody id="memberList"></tbody>
     </table>
   </div>
 
+  <!-- പേയ്‌മെന്റ് ഹിസ്റ്ററി സെക്ഷൻ -->
+  <div class="card">
+    <h3 style="margin-top:0; font-size:16px;">📜 പേയ്‌മെന്റ് ഹിസ്റ്ററി (Passbook)</h3>
+    <div id="paymentHistory"></div>
+  </div>
+
+  <!-- QR കോഡ് പോപ്പ്അപ്പ് മോഡൽ -->
+  <div id="qrModal" class="modal">
+    <div class="modal-content">
+      <h3 id="modalName" style="margin-top:0; font-size:16px;"></h3>
+      <p id="modalAmount" style="font-weight:bold; color:#1a73e8; font-size:18px; margin: 4px 0;"></p>
+      <p style="font-size:12px; color:#555; margin-bottom:10px;">GPay / PhonePe വഴി സ്കാൻ ചെയ്യുക</p>
+      <img id="qrImg" src="" alt="QR Code" style="width: 200px; height: 200px; margin: 0 auto; display: block; border: 1px solid #ddd; border-radius: 8px; padding: 4px;">
+      <br>
+      <a id="upiDeepLink" href="#" class="btn-pay" style="display:block; padding:10px; margin-top:10px; text-align:center;">GPay / UPI ആപ്പ് വഴി അടയ്ക്കുക</a>
+      <button class="close-btn" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+
   <script>
+    const UPI_ID = "sarithamanikandan801-1@oksbi";
+    const PAYEE_NAME = "Family Fund";
     const MONTHLY_UNIT = 1000;
     const TOTAL_MONTHS = 12;
+
+    // ഫണ്ട് ആരംഭിച്ച മാസം: സെപ്റ്റംബർ 2026 (മാസം ഇൻഡെക്സ് 8)
+    const START_YEAR = 2026;
+    const START_MONTH = 8; // 8 = September (JavaScript months 0-11)
+
+    // നിലവിലെ മാസം കണക്കാക്കുന്നു (1 മുതൽ 12 വരെ)
+    function getElapsedMonths() {
+      const now = new Date();
+      let diff = (now.getFullYear() - START_YEAR) * 12 + (now.getMonth() - START_MONTH) + 1;
+      if (diff < 1) diff = 1;
+      if (diff > TOTAL_MONTHS) diff = TOTAL_MONTHS;
+      return diff;
+    }
 
     let members = [
       { name: "സരിത കെ എ", shares: 1, totalPaid: 1000, lastDate: "20-09-2026" },
       { name: "സരള കെ എ", shares: 1, totalPaid: 0, lastDate: "-" },
       { name: "സതീഷ് കുമാർ", shares: 1, totalPaid: 0, lastDate: "-" },
       { name: "പ്രശാന്ത് സി കെ", shares: 2, totalPaid: 2000, lastDate: "27-09-2026" },
-      { name: "വിനിത", shares: 1, totalPaid: 0, lastDate: "-" },
+      { name: "വിനിത / സുനിൽ", shares: 1, totalPaid: 0, lastDate: "-" },
       { name: "വിനോദ്", shares: 1, totalPaid: 0, lastDate: "-" },
       { name: "മണികണ്ഠൻ വി", shares: 1, totalPaid: 1000, lastDate: "20-09-2026" },
       { name: "മണികണ്ഠൻ പി", shares: 1, totalPaid: 0, lastDate: "-" },
       { name: "പ്രസീത സി കെ", shares: 1, totalPaid: 0, lastDate: "-" },
-      { name: "സുനിൽ", shares: 1, totalPaid: 0, lastDate: "-" },
       { name: "കണ്ണൻ", shares: 1, totalPaid: 0, lastDate: "-" }
     ];
 
+    let paymentHistory = [
+      { name: "പ്രശാന്ത് സി കെ", amount: 2000, date: "27-09-2026" },
+      { name: "സരിത കെ എ", amount: 1000, date: "20-09-2026" },
+      { name: "മണികണ്ഠൻ വി", amount: 1000, date: "20-09-2026" }
+    ];
+
     function renderUI() {
+      let currentMonthNumber = getElapsedMonths();
+      document.getElementById('currentMonthText').innerText = `${currentMonthNumber}-ാം മാസം (12-ൽ)`;
+
       let select = document.getElementById('memberSelect');
       let list = document.getElementById('memberList');
       select.innerHTML = '<option value="">അംഗത്തിന്റെ പേര് തിരഞ്ഞെടുക്കുക</option>';
@@ -119,29 +177,73 @@
         totalYearlyTarget += yearlyGoal;
         totalCollected += m.totalPaid;
 
-        if (m.totalPaid < monthlyDue) {
-          currentMonthPending += (monthlyDue - m.totalPaid);
-        }
+        // ഈ മാസം വരെയുള്ള മൊത്തം അടയ്ക്കേണ്ട തുക
+        let dueTillCurrentMonth = monthlyDue * currentMonthNumber;
+        let thisMonthPending = dueTillCurrentMonth - m.totalPaid;
+        if (thisMonthPending < 0) thisMonthPending = 0;
+        currentMonthPending += thisMonthPending;
 
         let yearlyRemaining = yearlyGoal - m.totalPaid;
         if (yearlyRemaining < 0) yearlyRemaining = 0;
 
         select.innerHTML += `<option value="${idx}">${m.name} (${m.shares} ഫണ്ട് - ₹${monthlyDue})</option>`;
 
+        let payActionHtml = '';
+        if (thisMonthPending > 0) {
+          payActionHtml = `<button class="btn-pay" onclick="openPaymentModal('${m.name}', ${thisMonthPending})">Pay ₹${thisMonthPending}</button>`;
+        } else {
+          payActionHtml = `<span class="paid-badge">Paid ✓</span>`;
+        }
+
         list.innerHTML += `<tr>
           <td>
             <strong>${m.name}</strong>
             ${m.shares > 1 ? `<span class="share-tag">${m.shares} ഫണ്ട്</span>` : ''}
+            <div>${m.lastDate !== '-' ? `<span class="date-badge">${m.lastDate}</span>` : ''}</div>
           </td>
           <td class="status-paid">₹${m.totalPaid}</td>
-          <td>${m.lastDate !== '-' ? `<span class="date-badge">${m.lastDate}</span>` : '-'}</td>
           <td class="status-pending">₹${yearlyRemaining}</td>
+          <td>${payActionHtml}</td>
         </tr>`;
       });
 
       document.getElementById('totalCollected').innerText = '₹' + totalCollected;
       document.getElementById('totalPending').innerText = '₹' + currentMonthPending;
       document.getElementById('yearlyTarget').innerText = '₹' + totalYearlyTarget;
+
+      let historyDiv = document.getElementById('paymentHistory');
+      if (paymentHistory.length === 0) {
+        historyDiv.innerHTML = '<div style="color:#777; font-size:13px; text-align:center; padding:10px;">അടവുകളൊന്നും രേഖപ്പെടുത്തിയിട്ടില്ല</div>';
+      } else {
+        historyDiv.innerHTML = '';
+        paymentHistory.forEach(item => {
+          historyDiv.innerHTML += `
+            <div class="history-item">
+              <div>
+                <strong>${item.name}</strong>
+                <div class="history-date">തീയതി: ${item.date}</div>
+              </div>
+              <div class="history-amount">+ ₹${item.amount}</div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    function openPaymentModal(name, amount) {
+      let upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${amount}&cu=INR&tn=${encodeURIComponent(name + ' Fund')}`;
+      let qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
+
+      document.getElementById('modalName').innerText = name;
+      document.getElementById('modalAmount').innerText = '₹' + amount;
+      document.getElementById('qrImg').src = qrCodeUrl;
+      document.getElementById('upiDeepLink').href = upiUrl;
+
+      document.getElementById('qrModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('qrModal').style.display = 'none';
     }
 
     function autoFillAmount() {
@@ -172,13 +274,24 @@
       members[idx].totalPaid += amt;
       members[idx].lastDate = formattedDate;
 
+      paymentHistory.unshift({
+        name: members[idx].name,
+        amount: amt,
+        date: formattedDate
+      });
+
       document.getElementById('paidDate').value = '';
       renderUI();
+    }
+
+    window.onclick = function(event) {
+      let modal = document.getElementById('qrModal');
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
     }
 
     renderUI();
   </script>
 </body>
 </html>
-
-
