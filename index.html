@@ -1,1 +1,181 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>കുടുംബ ഫണ്ട് (1 വർഷം)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 12px; color: #1c1e21; }
+    .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; padding: 18px; border-radius: 12px; text-align: center; margin-bottom: 12px; }
+    .header h1 { margin: 0; font-size: 22px; }
+    
+    /* അറിയിപ്പ് ബോക്സ് */
+    .notice-card { background: #fff8e1; border-left: 5px solid #fbc02d; padding: 12px 14px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .notice-title { font-weight: bold; color: #b78103; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+    .notice-text { margin: 4px 0 0 0; font-size: 13px; color: #5d4037; font-weight: 500; }
+
+    .card { background: white; padding: 14px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 12px; }
+    .stats { display: flex; gap: 8px; }
+    .stat-box { flex: 1; padding: 10px 4px; border-radius: 8px; text-align: center; font-size: 12px; }
+    .stat-box.green { background: #e6f4ea; color: #137333; }
+    .stat-box.red { background: #fce8e6; color: #c5221f; }
+    .stat-box.blue { background: #e8f0fe; color: #1a73e8; }
+    .stat-num { font-size: 16px; font-weight: bold; margin-top: 4px; }
+    input, select, button { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccd0d5; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+    button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+    th, td { padding: 8px 5px; border-bottom: 1px solid #ebedf0; text-align: left; }
+    th { background: #f5f6f7; font-weight: 600; }
+    .status-paid { color: #137333; font-weight: bold; }
+    .status-pending { color: #c5221f; font-weight: bold; }
+    .date-badge { font-size: 11px; color: #555; background: #eee; padding: 2px 5px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+    .share-tag { font-size: 11px; background: #e8f0fe; color: #1a73e8; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>കുടുംബ ഫണ്ട്</h1>
+    <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 13px;">1 വിഹിതം = ₹1000/മാസം (കാലാവധി: 12 മാസം)</p>
+  </div>
+
+  <!-- അറിയിപ്പ് ബോക്സ് -->
+  <div class="notice-card">
+    <div class="notice-title">📢 പ്രധാന അറിയിപ്പ്</div>
+    <div class="notice-text">എല്ലാ മാസവും <strong>10-ാം തീയതിക്ക് മുൻപായി</strong> ഫണ്ട് തുക അടയ്ക്കണമെന്ന് ഓർമ്മിപ്പിക്കുന്നു.</div>
+  </div>
+
+  <div class="card">
+    <div class="stats">
+      <div class="stat-box green">
+        <div>ആകെ പിരിഞ്ഞത്</div>
+        <div class="stat-num" id="totalCollected">₹0</div>
+      </div>
+      <div class="stat-box red">
+        <div>ഈ മാസത്തെ ബാക്കി</div>
+        <div class="stat-num" id="totalPending">₹0</div>
+      </div>
+      <div class="stat-box blue">
+        <div>1 വർഷത്തെ ലക്ഷ്യം</div>
+        <div class="stat-num" id="yearlyTarget">₹0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0; font-size:16px;">പുതിയ അടവ് രേഖപ്പെടുത്തുക</h3>
+    <select id="memberSelect" onchange="autoFillAmount()"></select>
+    <input type="number" id="paidAmount" placeholder="അടച്ച തുക (₹)">
+    <input type="date" id="paidDate">
+    <button onclick="recordPayment()">അപ്‌ഡേറ്റ് ചെയ്യുക</button>
+  </div>
+
+  <div class="card" style="overflow-x:auto;">
+    <h3 style="margin-top:0; font-size:16px;">അംഗങ്ങളുടെ നിലവിലെ കണക്ക്</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>പേര്</th>
+          <th>അടച്ചത്</th>
+          <th>തീയതി</th>
+          <th>1 വർഷത്തെ ബാക്കി</th>
+        </tr>
+      </thead>
+      <tbody id="memberList"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const MONTHLY_UNIT = 1000;
+    const TOTAL_MONTHS = 12;
+
+    let members = [
+      { name: "സരിത കെ എ", shares: 1, totalPaid: 1000, lastDate: "20-09-2026" },
+      { name: "സരള കെ എ", shares: 1, totalPaid: 0, lastDate: "-" },
+      { name: "സതീഷ് കുമാർ", shares: 1, totalPaid: 0, lastDate: "-" },
+      { name: "പ്രശാന്ത് സി കെ", shares: 2, totalPaid: 2000, lastDate: "27-09-2026" },
+      { name: "വിനിത", shares: 1, totalPaid: 0, lastDate: "-" },
+      { name: "വിനോദ്", shares: 1, totalPaid: 0, lastDate: "-" },
+      { name: "മണികണ്ഠൻ വി", shares: 1, totalPaid: 1000, lastDate: "20-09-2026" },
+      { name: "മണികണ്ഠൻ പി", shares: 1, totalPaid: 0, lastDate: "-" },
+      { name: "പ്രസീത സി കെ", shares: 1, totalPaid: 0, lastDate: "-" }
+    ];
+
+    function renderUI() {
+      let select = document.getElementById('memberSelect');
+      let list = document.getElementById('memberList');
+      select.innerHTML = '<option value="">അംഗത്തിന്റെ പേര് തിരഞ്ഞെടുക്കുക</option>';
+      list.innerHTML = '';
+
+      let totalCollected = 0;
+      let currentMonthPending = 0;
+      let totalYearlyTarget = 0;
+
+      members.forEach((m, idx) => {
+        let monthlyDue = m.shares * MONTHLY_UNIT;
+        let yearlyGoal = monthlyDue * TOTAL_MONTHS;
+        totalYearlyTarget += yearlyGoal;
+        totalCollected += m.totalPaid;
+
+        if (m.totalPaid < monthlyDue) {
+          currentMonthPending += (monthlyDue - m.totalPaid);
+        }
+
+        let yearlyRemaining = yearlyGoal - m.totalPaid;
+        if (yearlyRemaining < 0) yearlyRemaining = 0;
+
+        select.innerHTML += `<option value="${idx}">${m.name} (${m.shares} ഫണ്ട് - ₹${monthlyDue})</option>`;
+
+        list.innerHTML += `<tr>
+          <td>
+            <strong>${m.name}</strong>
+            ${m.shares > 1 ? `<span class="share-tag">${m.shares} ഫണ്ട്</span>` : ''}
+          </td>
+          <td class="status-paid">₹${m.totalPaid}</td>
+          <td>${m.lastDate !== '-' ? `<span class="date-badge">${m.lastDate}</span>` : '-'}</td>
+          <td class="status-pending">₹${yearlyRemaining}</td>
+        </tr>`;
+      });
+
+      document.getElementById('totalCollected').innerText = '₹' + totalCollected;
+      document.getElementById('totalPending').innerText = '₹' + currentMonthPending;
+      document.getElementById('yearlyTarget').innerText = '₹' + totalYearlyTarget;
+    }
+
+    function autoFillAmount() {
+      let idx = document.getElementById('memberSelect').value;
+      if (idx !== "") {
+        document.getElementById('paidAmount').value = members[idx].shares * MONTHLY_UNIT;
+      }
+    }
+
+    function recordPayment() {
+      let idx = document.getElementById('memberSelect').value;
+      let amt = parseFloat(document.getElementById('paidAmount').value);
+      let dateVal = document.getElementById('paidDate').value;
+
+      if (idx === "" || isNaN(amt) || amt <= 0) {
+        alert("ദയവായി അംഗത്തിന്റെ പേരും തുകയും നൽകുക");
+        return;
+      }
+
+      let formattedDate = "-";
+      if (dateVal) {
+        let parts = dateVal.split("-");
+        formattedDate = parts[2] + "-" + parts[1] + "-" + parts[0];
+      } else {
+        formattedDate = new Date().toLocaleDateString('en-GB');
+      }
+
+      members[idx].totalPaid += amt;
+      members[idx].lastDate = formattedDate;
+
+      document.getElementById('paidDate').value = '';
+      renderUI();
+    }
+
+    renderUI();
+  </script>
+</body>
+</html>
 
