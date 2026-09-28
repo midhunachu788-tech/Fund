@@ -9,40 +9,54 @@
     .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; padding: 18px; border-radius: 12px; text-align: center; margin-bottom: 12px; }
     .header h1 { margin: 0; font-size: 22px; }
     
-    /* അറിയിപ്പ് ബോക്സ് */
     .notice-card { background: #fff8e1; border-left: 5px solid #fbc02d; padding: 12px 14px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
     .notice-title { font-weight: bold; color: #b78103; font-size: 14px; display: flex; align-items: center; gap: 6px; }
     .notice-text { margin: 4px 0 0 0; font-size: 13px; color: #5d4037; font-weight: 500; }
 
     .card { background: white; padding: 14px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 12px; }
-    .stats { display: flex; gap: 8px; }
-    .stat-box { flex: 1; padding: 10px 4px; border-radius: 8px; text-align: center; font-size: 12px; }
+    
+    /* സ്ഥിതിവിവരക്കണക്കുകൾ */
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .stat-box { padding: 10px 6px; border-radius: 8px; text-align: center; font-size: 12px; }
     .stat-box.green { background: #e6f4ea; color: #137333; }
     .stat-box.red { background: #fce8e6; color: #c5221f; }
     .stat-box.blue { background: #e8f0fe; color: #1a73e8; }
+    .stat-box.purple { background: #f3e8fd; color: #7b1fa2; }
     .stat-num { font-size: 16px; font-weight: bold; margin-top: 4px; }
+
+    /* പ്രോഗ്രസ് ബാർ */
+    .progress-container { margin-top: 6px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #555; }
+    .progress-bar-bg { width: 100%; height: 12px; background: #e4e6eb; border-radius: 10px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #34a853, #1e8e3e); border-radius: 10px; transition: width 0.5s ease-in-out; }
+
     input, select, button { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #ccd0d5; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
     button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
-    th, td { padding: 8px 5px; border-bottom: 1px solid #ebedf0; text-align: left; vertical-align: middle; }
+    th, td { padding: 10px 5px; border-bottom: 1px solid #ebedf0; text-align: left; vertical-align: middle; }
     th { background: #f5f6f7; font-weight: 600; }
     .status-paid { color: #137333; font-weight: bold; }
     .status-pending { color: #c5221f; font-weight: bold; }
-    .date-badge { font-size: 11px; color: #555; background: #eee; padding: 2px 5px; border-radius: 4px; display: inline-block; margin-top: 2px; }
     .share-tag { font-size: 11px; background: #e8f0fe; color: #1a73e8; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
     
-    /* Pay Now & Paid ബട്ടണുകൾ */
-    .btn-pay { display: inline-flex; align-items: center; justify-content: center; gap: 4px; background: #25D366; color: white; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; border: none; cursor: pointer; }
-    .btn-pay:hover { background: #1ebd5b; }
-    .paid-badge { color: #137333; font-weight: bold; font-size: 12px; background: #e6f4ea; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+    /* 12 മാസങ്ങളുടെ ബാഡ്ജ് ലിസ്റ്റ് */
+    .month-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; }
+    .month-badge { font-size: 10px; padding: 2px 5px; border-radius: 4px; font-weight: 600; }
+    .m-paid { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
+    .m-due { background: #fce8e6; color: #c5221f; border: 1px solid #fad2cf; }
+    .m-future { background: #f1f3f4; color: #70757a; border: 1px solid #dadce0; }
 
-    /* ഹിസ്റ്ററി ലിസ്റ്റ് */
+    .btn-pay { display: inline-flex; align-items: center; justify-content: center; gap: 4px; background: #25D366; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; border: none; cursor: pointer; white-space: nowrap; }
+    .btn-pay:hover { background: #1ebd5b; }
+    .paid-badge { color: #137333; font-weight: bold; font-size: 12px; background: #e6f4ea; padding: 4px 8px; border-radius: 6px; display: inline-block; white-space: nowrap; }
+
+    /* ഹിസ്റ്ററി */
     .history-item { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px dashed #e4e6eb; font-size: 13px; }
     .history-item:last-child { border-bottom: none; }
     .history-date { font-size: 11px; color: #65676b; margin-top: 2px; }
     .history-amount { font-weight: bold; color: #137333; }
 
-    /* QR കോഡ് പോപ്പ്അപ്പ് മോഡൽ */
+    /* QR കോഡ് മോഡൽ */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
     .modal-content { background: white; padding: 20px; border-radius: 12px; text-align: center; max-width: 320px; width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
     .close-btn { background: #65676b; color: white; padding: 8px 16px; border-radius: 6px; margin-top: 12px; border: none; cursor: pointer; }
@@ -55,7 +69,6 @@
     <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 13px;">1 വിഹിതം = ₹1000/മാസം | നിലവിലെ മാസം: <span id="currentMonthText">1-ാം മാസം</span></p>
   </div>
 
-  <!-- അറിയിപ്പ് ബോക്സ് -->
   <div class="notice-card">
     <div class="notice-title">📢 പ്രധാന അറിയിപ്പ്</div>
     <div class="notice-text">എല്ലാ മാസവും <strong>10-ാം തീയതിക്ക് മുൻപായി</strong> ഫണ്ട് തുക അടയ്ക്കണമെന്ന് ഓർമ്മിപ്പിക്കുന്നു.</div>
@@ -68,12 +81,27 @@
         <div class="stat-num" id="totalCollected">₹0</div>
       </div>
       <div class="stat-box red">
-        <div>ഈ മാസത്തെ ബാക്കി</div>
+        <div>ഈ മാസത്തെ കുടിശ്ശിക</div>
         <div class="stat-num" id="totalPending">₹0</div>
+      </div>
+      <div class="stat-box purple">
+        <div>അടച്ചവരുടെ എണ്ണം</div>
+        <div class="stat-num" id="paidCount">0 / 10</div>
       </div>
       <div class="stat-box blue">
         <div>1 വർഷത്തെ ലക്ഷ്യം</div>
         <div class="stat-num" id="yearlyTarget">₹0</div>
+      </div>
+    </div>
+
+    <!-- പ്രോഗ്രസ് ബാർ -->
+    <div class="progress-container">
+      <div class="progress-label">
+        <span>വാർഷിക ലക്ഷ്യം പുരോഗതി</span>
+        <span id="progressPercent">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div id="progressBar" class="progress-bar-fill" style="width: 0%;"></div>
       </div>
     </div>
   </div>
@@ -91,9 +119,9 @@
     <table>
       <thead>
         <tr>
-          <th>പേര്</th>
-          <th>ആകെ അടച്ചത്</th>
-          <th>1 വർഷത്തെ ബാക്കി</th>
+          <th>പേരും മാസങ്ങളും</th>
+          <th>അടച്ചത്</th>
+          <th>ബാക്കി</th>
           <th>അടവ് (Pay)</th>
         </tr>
       </thead>
@@ -101,13 +129,11 @@
     </table>
   </div>
 
-  <!-- പേയ്‌മെന്റ് ഹിസ്റ്ററി സെക്ഷൻ -->
   <div class="card">
     <h3 style="margin-top:0; font-size:16px;">📜 പേയ്‌മെന്റ് ഹിസ്റ്ററി (Passbook)</h3>
     <div id="paymentHistory"></div>
   </div>
 
-  <!-- QR കോഡ് പോപ്പ്അപ്പ് മോഡൽ -->
   <div id="qrModal" class="modal">
     <div class="modal-content">
       <h3 id="modalName" style="margin-top:0; font-size:16px;"></h3>
@@ -126,11 +152,10 @@
     const MONTHLY_UNIT = 1000;
     const TOTAL_MONTHS = 12;
 
-    // ഫണ്ട് ആരംഭിച്ച മാസം: സെപ്റ്റംബർ 2026 (മാസം ഇൻഡെക്സ് 8)
     const START_YEAR = 2026;
-    const START_MONTH = 8; // 8 = September (JavaScript months 0-11)
+    const START_MONTH = 8; // 8 = September
+    const MONTH_NAMES = ["സെപ്", "ഒക്ടോ", "നവം", "ഡിസം", "ജനു", "ഫെബ്രു", "മാർച്ച്", "ഏപ്രിൽ", "മേയ്", "ജൂൺ", "ജൂലൈ", "ഓഗസ്റ്റ്"];
 
-    // നിലവിലെ മാസം കണക്കാക്കുന്നു (1 മുതൽ 12 വരെ)
     function getElapsedMonths() {
       const now = new Date();
       let diff = (now.getFullYear() - START_YEAR) * 12 + (now.getMonth() - START_MONTH) + 1;
@@ -170,6 +195,7 @@
       let totalCollected = 0;
       let currentMonthPending = 0;
       let totalYearlyTarget = 0;
+      let paidCountThisMonth = 0;
 
       members.forEach((m, idx) => {
         let monthlyDue = m.shares * MONTHLY_UNIT;
@@ -177,7 +203,6 @@
         totalYearlyTarget += yearlyGoal;
         totalCollected += m.totalPaid;
 
-        // ഈ മാസം വരെയുള്ള മൊത്തം അടയ്ക്കേണ്ട തുക
         let dueTillCurrentMonth = monthlyDue * currentMonthNumber;
         let thisMonthPending = dueTillCurrentMonth - m.totalPaid;
         if (thisMonthPending < 0) thisMonthPending = 0;
@@ -186,7 +211,26 @@
         let yearlyRemaining = yearlyGoal - m.totalPaid;
         if (yearlyRemaining < 0) yearlyRemaining = 0;
 
+        if (thisMonthPending === 0) {
+          paidCountThisMonth++;
+        }
+
         select.innerHTML += `<option value="${idx}">${m.name} (${m.shares} ഫണ്ട് - ₹${monthlyDue})</option>`;
+
+        // 12 മാസ ബാഡ്ജുകൾ തയ്യാറാക്കൽ
+        let monthsCompleted = Math.floor(m.totalPaid / monthlyDue);
+        let badgesHtml = '<div class="month-dots">';
+        for (let i = 1; i <= TOTAL_MONTHS; i++) {
+          let label = MONTH_NAMES[i - 1];
+          if (i <= monthsCompleted) {
+            badgesHtml += `<span class="month-badge m-paid" title="${label}: അടച്ചു">${label} ✓</span>`;
+          } else if (i <= currentMonthNumber) {
+            badgesHtml += `<span class="month-badge m-due" title="${label}: ബാക്കി">${label} ✗</span>`;
+          } else {
+            badgesHtml += `<span class="month-badge m-future" title="${label}: വരാനിരിക്കുന്നു">${label}</span>`;
+          }
+        }
+        badgesHtml += '</div>';
 
         let payActionHtml = '';
         if (thisMonthPending > 0) {
@@ -199,7 +243,7 @@
           <td>
             <strong>${m.name}</strong>
             ${m.shares > 1 ? `<span class="share-tag">${m.shares} ഫണ്ട്</span>` : ''}
-            <div>${m.lastDate !== '-' ? `<span class="date-badge">${m.lastDate}</span>` : ''}</div>
+            ${badgesHtml}
           </td>
           <td class="status-paid">₹${m.totalPaid}</td>
           <td class="status-pending">₹${yearlyRemaining}</td>
@@ -207,10 +251,18 @@
         </tr>`;
       });
 
+      // കാർഡുകളിലെ തുകകൾ
       document.getElementById('totalCollected').innerText = '₹' + totalCollected;
       document.getElementById('totalPending').innerText = '₹' + currentMonthPending;
       document.getElementById('yearlyTarget').innerText = '₹' + totalYearlyTarget;
+      document.getElementById('paidCount').innerText = `${paidCountThisMonth} / ${members.length} പേർ`;
 
+      // പ്രോഗ്രസ് ബാർ കണക്കുകൂട്ടൽ
+      let percentage = totalYearlyTarget > 0 ? ((totalCollected / totalYearlyTarget) * 100).toFixed(1) : 0;
+      document.getElementById('progressPercent').innerText = percentage + '%';
+      document.getElementById('progressBar').style.width = percentage + '%';
+
+      // ഹിസ്റ്ററി
       let historyDiv = document.getElementById('paymentHistory');
       if (paymentHistory.length === 0) {
         historyDiv.innerHTML = '<div style="color:#777; font-size:13px; text-align:center; padding:10px;">അടവുകളൊന്നും രേഖപ്പെടുത്തിയിട്ടില്ല</div>';
