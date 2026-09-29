@@ -15,14 +15,30 @@
       --border: #e2e8f0;
       --success: #16a34a;
       --danger: #dc2626;
+      --warning-bg: #fef3c7;
+      --warning-text: #92400e;
       --radius: 14px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 16px; max-width: 600px; margin: 0 auto; }
     
-    header { text-align: center; margin-bottom: 20px; }
+    header { text-align: center; margin-bottom: 16px; }
     header h1 { font-size: 1.5rem; color: var(--primary); margin-bottom: 4px; }
     header p { font-size: 0.9rem; color: var(--text-muted); }
+
+    /* Notice Box */
+    .notice-box {
+      background: var(--warning-bg);
+      color: var(--warning-text);
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 16px;
+      border: 1px solid #fde68a;
+      line-height: 1.4;
+    }
 
     .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
     .metric-card { background: var(--card-bg); padding: 14px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -51,6 +67,13 @@
     .badge.future { background: #f1f5f9; color: #94a3b8; }
 
     .pay-btn { display: block; text-align: center; background: #2563eb; color: #ffffff; text-decoration: none; padding: 8px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; margin-top: 8px; }
+
+    /* History Table */
+    .history-card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; margin-top: 8px; margin-bottom: 24px; }
+    .history-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
+    .history-table th { background: #f1f5f9; padding: 10px; color: var(--text-muted); font-weight: 600; }
+    .history-table td { padding: 10px; border-top: 1px solid var(--border); }
+    .history-table tr:hover { background-color: #f8fafc; }
     
     .loading { text-align: center; padding: 30px; font-size: 1rem; color: var(--text-muted); }
   </style>
@@ -61,6 +84,11 @@
     <h1>കുടുംബ ഫണ്ട് 2026-2027</h1>
     <p>പ്രതിമാസ വരവുചെലവ് കണക്കുകൾ</p>
   </header>
+
+  <!-- നിങ്ങൾ ആവശ്യപ്പെട്ടതുപോലെയുള്ള നോട്ടീസ് വാചകം -->
+  <div class="notice-box">
+    📢 എല്ലാ മാസവും 10-ാം തീയതിക്ക് മുമ്പായി ഫണ്ട് തുക അടയ്ക്കണമെന്ന് ഓർമ്മിപ്പിക്കുന്നു.
+  </div>
 
   <div id="loading" class="loading">കണക്കുകൾ ലോഡ് ചെയ്യുന്നു...</div>
 
@@ -92,17 +120,27 @@
 
     <div class="section-title">അംഗങ്ങളുടെ സ്റ്റാറ്റസ്</div>
     <div id="memberList"></div>
+
+    <!-- പേയ്‌മെന്റ് ഹിസ്റ്ററി (പാസ്ബുക്ക്) -->
+    <div class="section-title" style="margin-top: 24px;">പേയ്‌മെന്റ് ഹിസ്റ്ററി (Recent Payments)</div>
+    <div class="history-card">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>അംഗം</th>
+            <th>തീയതി</th>
+            <th>അടച്ച തുക</th>
+          </tr>
+        </thead>
+        <tbody id="historyList"></tbody>
+      </table>
+    </div>
   </div>
 
   <script>
-    // നിങ്ങളുടെ ഗൂഗിൾ ഷീറ്റിന്റെ പബ്ലിക് CSV ലിങ്ക്
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxAR5xLq6QlNHAfblXgmq6I9Mm6U6uiMletzuIi6H0qw9sqjFG8Wwc_wQ8-EkZ3ySi3GXNRt8N46VM/pub?output=csv
-";
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxAR5xLq6QlNHAfblXgmq6I9Mm6U6uiMletzuIi6H0qw9sqjFG8Wwc_wQ8-EkZ3ySi3GXNRt8N46VM/pub?output=csv";
 
-    // സാമ്പത്തിക വർഷ മാസങ്ങൾ (സെപ്റ്റംബർ 2026 മുതൽ ഓഗസ്റ്റ് 2027 വരെ)
     const MONTHS = ["സെപ്", "ഒക്ടോ", "നവം", "ഡിസം", "ജനു", "ഫെബ്രു", "മാർച്ച്", "ഏപ്രിൽ", "മേയ്", "ജൂൺ", "ജൂലൈ", "ഓഗസ്റ്റ്"];
-    
-    // നിലവിൽ നടന്ന മാസം (സെപ്റ്റംബർ = 1 മാസം പൂർത്തിയായി)
     const CURRENT_ELAPSED_MONTHS = 1; 
     const MONTHLY_RATE = 1000;
 
@@ -110,10 +148,10 @@
       try {
         const res = await fetch(SHEET_CSV_URL + "&t=" + new Date().getTime());
         const text = await res.text();
-        const rows = text.trim().split("\n").slice(1);
+        const lines = text.trim().split(/\r?\n/).filter(line => line.trim() !== "");
+        const rows = lines.slice(1);
 
         const members = rows.map(row => {
-          // CSV വരികളിലെ കോമ വേർതിരിക്കുന്നു
           const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v ? v.trim().replace(/^"\vert{}"$/g, '') : '');
           return {
             name: cols[0] || "",
@@ -125,7 +163,7 @@
 
         renderDashboard(members);
       } catch (err) {
-        document.getElementById("loading").innerHTML = "ഡാറ്റ ലോഡ് ചെയ്യാൻ കഴിഞ്ഞില്ല. ഷീറ്റ് ലിങ്ക് പബ്ലിക് ആണെന്ന് ഉറപ്പുവരുത്തുക.";
+        document.getElementById("loading").innerHTML = "ഡാറ്റ ലോഡ് ചെയ്യാൻ കഴിഞ്ഞില്ല. ദയവായി അല്പം കഴിഞ്ഞ് ശ്രമിക്കുക.";
         console.error(err);
       }
     }
@@ -140,7 +178,11 @@
       let currentMonthPaidCount = 0;
 
       const listContainer = document.getElementById("memberList");
+      const historyContainer = document.getElementById("historyList");
       listContainer.innerHTML = "";
+      historyContainer.innerHTML = "";
+
+      let paidMembersList = [];
 
       members.forEach(member => {
         const expectedToDate = member.units * MONTHLY_RATE * CURRENT_ELAPSED_MONTHS;
@@ -155,7 +197,10 @@
           currentMonthPaidCount++;
         }
 
-        // ബാഡ്ജുകൾ നിർമ്മിക്കുന്നു
+        if (member.paid > 0) {
+          paidMembersList.push(member);
+        }
+
         let badgesHtml = "";
         MONTHS.forEach((m, idx) => {
           if (idx < monthsPaidCount) {
@@ -167,7 +212,6 @@
           }
         });
 
-        // കാർഡ് HTML
         const card = document.createElement("div");
         card.className = "member-card";
         card.innerHTML = `
@@ -188,7 +232,21 @@
         listContainer.appendChild(card);
       });
 
-      // മെയിൻ കണക്കുകൾ അപ്ഡേറ്റ് ചെയ്യുന്നു
+      // ഹിസ്റ്ററി ലിസ്റ്റ്
+      if (paidMembersList.length === 0) {
+        historyContainer.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">പേയ്‌മെന്റുകൾ ഒന്നും ലഭിച്ചിട്ടില്ല</td></tr>`;
+      } else {
+        paidMembersList.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><strong>${item.name}</strong></td>
+            <td>${item.date}</td>
+            <td style="color: var(--success); font-weight: 700;">₹${item.paid}</td>
+          `;
+          historyContainer.appendChild(tr);
+        });
+      }
+
       document.getElementById("totalCollected").innerText = "₹" + totalCollected;
       document.getElementById("totalPending").innerText = "₹" + totalPending;
       document.getElementById("currentMonthPaidCount").innerText = currentMonthPaidCount + " പേർ";
@@ -199,7 +257,6 @@
       document.getElementById("progressBar").style.width = progress + "%";
     }
 
-    // പേജ് തുറക്കുമ്പോൾ തനിയെ റൺ ആകുന്നു
     fetchData();
   </script>
 </body>
