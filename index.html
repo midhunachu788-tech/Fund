@@ -137,13 +137,26 @@
 
   <script>
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxAR5xLq6QlNHAfblXgmq6I9Mm6U6uiMletzuIi6H0qw9sqjFG8Wwc_wQ8-EkZ3ySi3GXNRt8N46VM/pub?output=csv";
-    
-    // നിങ്ങളുടെ യഥാർത്ഥ UPI ID ഇവിടെ നൽകിയിരിക്കുന്നു
     const UPI_ID = "sarithamanikandan801-1@oksbi";
+    const MONTHLY_RATE = 1000;
 
     const MONTHS = ["സെപ്", "ഒക്ടോ", "നവം", "ഡിസം", "ജനു", "ഫെബ്രു", "മാർച്ച്", "ഏപ്രിൽ", "മേയ്", "ജൂൺ", "ജൂലൈ", "ഓഗസ്റ്റ്"];
-    const CURRENT_ELAPSED_MONTHS = 1; 
-    const MONTHLY_RATE = 1000;
+
+    // ഇന്നത്തെ തീയതി നോക്കി മാസം തനിയെ കണക്കുകൂട്ടുന്ന ഓട്ടോമാറ്റിക് ഫംഗ്ഷൻ
+    function getElapsedMonths() {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth(); // 0 = Jan, 8 = Sep, 9 = Oct ...
+
+      // 2026 സെപ്റ്റംബർ = 1-ാം മാസം
+      let elapsed = (currentYear - 2026) * 12 + (currentMonth - 8) + 1;
+      
+      if (elapsed < 1) elapsed = 1;
+      if (elapsed > 12) elapsed = 12;
+      return elapsed;
+    }
+
+    const CURRENT_ELAPSED_MONTHS = getElapsedMonths();
 
     async function fetchData() {
       try {
